@@ -10,11 +10,12 @@
     "test": "node --test src/**/*.test.js"
   },
   "engines": {
-    "node": ">=18"
+    "node": ">=22"
   },
   "dependencies": {
     "dotenv": "^18.0.9",
     "express": "^5.1.0",
-    "mongoose": "^9.11.4"
+    "mongoose": "^9.11.4",
+    "openai": "^7.49.0"
   }
 }

@@ -1,5 +1,6 @@
 import crypto from 'node:crypto';
 import { VaultEntry } from '../models/VaultEntry.js';
+import { TEST_DB_NAME } from '../db/connection.js';
 
 const SECRET = process.env.VAULT_SECRET ?? 'poc-only-not-for-production';
 const TOKEN_LENGTH = 12;
@@ -115,8 +116,12 @@ export async function revealMany(tokens) {
 }
 
 /**
- * Test helper: wipe vault documents in the connected database.
+ * Test helper: wipe vault documents, only when connected to privacy_vault_test.
+ * Any other database (including privacy_vault) is refused before deleting anything.
  */
 export async function resetVault() {
+  if (VaultEntry.db.name !== TEST_DB_NAME) {
+    throw new Error(`resetVault only runs on ${TEST_DB_NAME}; no data was modified.`);
+  }
   await VaultEntry.deleteMany({});
 }

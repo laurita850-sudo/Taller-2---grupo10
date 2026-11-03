@@ -1,20 +1,21 @@
 import 'dotenv/config';
 import { after, before, beforeEach, test } from 'node:test';
 import assert from 'node:assert/strict';
-import { connectDb, disconnectDb } from '../db/connection.js';
+import { assertTestDatabaseUri, connectDb, disconnectDb, TEST_DB_NAME } from '../db/connection.js';
 import { anonymizeMessage, deanonymizeMessage } from './anonymizer.js';
 import { getOrCreateToken, resetVault } from './vault.js';
 
-function testMongoUri() {
-  const uri = process.env.MONGO_URI;
-  if (!uri) {
-    throw new Error('MONGO_URI is required for tests');
-  }
-  return uri.replace('/privacy_vault', '/privacy_vault_test');
-}
+// Guard 1: validated at load time, before any connection. If it throws, no test in this file runs.
+const TEST_URI = assertTestDatabaseUri(process.env.TEST_MONGO_URI, process.env.MONGO_URI);
 
 before(async () => {
-  await connectDb(testMongoUri());
+  const connection = await connectDb(TEST_URI);
+  // Guard 2: confirm the database the driver actually selected.
+  if (connection.name !== TEST_DB_NAME) {
+    await disconnectDb();
+    throw new Error(`Connected database is not ${TEST_DB_NAME}. Tests stopped; no data was modified.`);
+  }
+  // Guard 3 lives in resetVault() itself.
 });
 
 beforeEach(async () => {
